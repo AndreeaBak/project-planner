@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 const Chance = require('chance');
-const serviceAccount = require('../project-planner-e362b-firebase-adminsdk-cinue-d354a843b0.json'); 
+const serviceAccount = require('../project-planner-e362b-firebase-adminsdk-cinue-d354a843b0.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -9,7 +9,7 @@ admin.initializeApp({
 const db = admin.firestore();
 const chance = new Chance();
 
-//Generare proiecte
+// Generare projects
 const generateProjects = (nrProiecte) => {
   const projects = [];
   for (let i = 0; i < nrProiecte; i++) {
@@ -23,12 +23,12 @@ const generateProjects = (nrProiecte) => {
   return projects;
 };
 
-//Generare membrii
+// Generare members
 const generateTeamMembers = (nrMembrii) => {
   const teamMembers = [];
   for (let i = 0; i < nrMembrii; i++) {
     const membru = {
-      fistname: chance.first(),
+      firstname: chance.first(),
       lastname: chance.last(),
       email: chance.email(),
     };
@@ -37,7 +37,7 @@ const generateTeamMembers = (nrMembrii) => {
   return teamMembers;
 };
 
-//Generare useri
+// Generare users
 const generateUsers = (nrUtilizatori) => {
   const users = [];
   for (let i = 0; i < nrUtilizatori; i++) {
@@ -50,19 +50,33 @@ const generateUsers = (nrUtilizatori) => {
   return users;
 };
 
-//Adauga date in Firestore
+// Adaugă date în Firestore
 const addData = async () => {
-  const nrProiecte = 10; 
-  const nrMembrii = 50; 
+  const nrProiecte = 5;
+  const nrMembrii = 20;
   const nrUtilizatori = 5;
 
   const projects = generateProjects(nrProiecte);
   const teamMembers = generateTeamMembers(nrMembrii);
   const users = generateUsers(nrUtilizatori);
 
-  await db.collection('projects').doc('projects-demo').set({ projects });
-  await db.collection('team').doc('team-demo').set({ teamMembers });
-  await db.collection('users').doc('users-demo').set({ users });
+  const projectsCollectionRef = db.collection('projects');
+  projects.forEach(async (project) => {
+    const projectDocRef = projectsCollectionRef.doc(); 
+    await projectDocRef.set(project);
+  });
+
+  const teamMembersCollectionRef = db.collection('team');
+  teamMembers.forEach(async (teamMember) => {
+    const teamMemberDocRef = teamMembersCollectionRef.doc();
+    await teamMemberDocRef.set(teamMember);
+  });
+
+  const usersCollectionRef = db.collection('users');
+  users.forEach(async (user) => {
+    const userDocRef = usersCollectionRef.doc();
+    await userDocRef.set(user);
+  });
 
   console.log('Data generated and added successfully.');
 };

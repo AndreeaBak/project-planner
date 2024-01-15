@@ -1,28 +1,58 @@
 const express = require('express');
 const router = express.Router();
 const admin = require('firebase-admin');
+const verifyToken = require('../middleware/authMiddleware.js')
 
 const db = admin.firestore();
 
 router.get('/', async (req, res) => {
   try {
-    const snapshot = await db.collection('projects').doc('projects-demo').get();
-    const projects = snapshot.data().projects;
+    const projectsSnapshot = await db.collection('projects').get();
+    const projects = [];
+    projectsSnapshot.forEach((doc) => {
+      projects.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
     res.json(projects);
-
   } catch (error) {
-    console.error('Unable to retrieve projects:', error);
-    res.status(500).send('Unable to retrieve projects.');
+    console.error('Error getting projects:', error);
+    res.status(500).send('Internal Server Error');
   }
-})
+});
 
-router.post('/', async(req,res)=> {
+router.get('/:id', async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const projectDoc = await db.collection('projects').doc(projectId).get();
+
+    if (!projectDoc.exists) {
+      return res.status(404).send('Project not found');
+    }
+
+    const projectData = {
+      id: projectDoc.id,
+      ...projectDoc.data()
+    };
+
+    res.json(projectData);
+  } catch (error) {
+    console.error('Error getting project by ID:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+router.post('/', verifyToken, async(req,res)=> {
   try{
-    const newProject = req.body;
-    const snapshot = await db.collection('projects').doc('projects-demo').get();
-    const projects = snapshot.data().projects;
-    projects.push(newProject);
-    await db.collection('projects').doc('projects-demo').set({projects});
+    let docRef=db.collection('projects').doc();
+
+    await docRef.set({
+      name: req.body.name,
+      description: req.body.description,
+      startDate: req.body.startDate
+    })
+
     res.json({message: 'Project added successfully'});
 
   } catch(error){
@@ -31,16 +61,16 @@ router.post('/', async(req,res)=> {
   }
 })
 
-router.put('/:id', async(req,res)=> {
+router.put('/:id', verifyToken, async(req,res)=> {
   try{
-    const {id} = req.params;
-    const updatedProject = req.body;
-    const snapshot = await db.collection('projects').doc('projects-demo').get();
-    const projects = snapshot.data().projects;
-    const index = projects.findIndex((p) => p.id === id);
-    projects[index] = updatedProject;
-    await db.collection('projects').doc('projects-demo').set({projects});
-    res.json({message: 'Project updated successfully'});
+    const id = req.params.id;
+    let docRef = db.collection('projects').doc(id);
+
+    await docRef.update({
+      name: req.body.name,
+      description: req.body.description,
+      startDate: req.body.startDate
+    })
 
   } catch(error){
     console.error('Unable to update the project:', error);
@@ -48,18 +78,22 @@ router.put('/:id', async(req,res)=> {
   }
 })
 
-router.delete('/:id', async(req,res)=> {
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
-    const {id} = req.params;
-    const snapshot = await db.collection('projects').doc('projects-demo').get();
-    const projects = snapshot.data().projects;
-    const filteredProjects = projects.filter((p) => p.id !== id);
-    await db.collection('projects').doc('projects-demo').set({projects: filteredProjects});
-    res.json({ message: 'Project deleted successfully' });
-  } catch (error){
-    console.error('Unable to delete the project:', error);
-    res.status(500).send('Unable to delete the project.');
+    const projectId = req.params.id;
+    const projectDoc = db.collection('projects').doc(projectId);
+    const snapshot = await projectDoc.get();
+
+    if (!snapshot.exists) {
+      return res.status(404).send('Project not found');
+    }
+
+    await projectDoc.delete();
+    res.send('Project deleted successfully');
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    res.status(500).send('Internal Server Error');
   }
-})
+});
 
 module.exports = router;
