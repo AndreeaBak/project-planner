@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const admin = require('firebase-admin');
-const verifyToken = require('../middleware/authMiddleware.js')
+const {verifyToken} = require('../middleware/authMiddleware.js')
 
 const db = admin.firestore();
 
@@ -47,7 +47,12 @@ router.post('/', verifyToken, async(req,res)=> {
   try{
     let docRef=db.collection('projects').doc();
 
+    if(!req.body.name || !req.body.description || !req.body.startDate) {
+      res.json({message:'Project must contain all data.'})
+    }
+
     await docRef.set({
+      projectId: docRef.id,
       name: req.body.name,
       description: req.body.description,
       startDate: req.body.startDate
@@ -66,12 +71,17 @@ router.put('/:id', verifyToken, async(req,res)=> {
     const id = req.params.id;
     let docRef = db.collection('projects').doc(id);
 
+    if(!req.body.name || !req.body.description || !req.body.startDate) {
+      res.json({message:'Project must contain all data.'})
+    }
+
     await docRef.update({
       name: req.body.name,
       description: req.body.description,
       startDate: req.body.startDate
     })
 
+    
   } catch(error){
     console.error('Unable to update the project:', error);
     res.status(500).send('Unable to update the project.');
@@ -81,9 +91,21 @@ router.put('/:id', verifyToken, async(req,res)=> {
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const projectId = req.params.id;
+
+    const teamMemberSnapshot = await db.collection('team').where('projectId', '==', projectId).get();
+    const updatedPromises = [];
+    teamMemberSnapshot.forEach((doc)=> {
+      updatedPromises.push(doc.ref.update({
+        projectId: null, 
+        projectName: null, 
+        projectDescription: null, 
+        projectStartDate: null, 
+      }));
+    });
+    await Promise.all(updatedPromises);
+
     const projectDoc = db.collection('projects').doc(projectId);
     const snapshot = await projectDoc.get();
-
     if (!snapshot.exists) {
       return res.status(404).send('Project not found');
     }
