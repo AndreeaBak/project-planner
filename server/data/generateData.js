@@ -1,19 +1,13 @@
-const admin = require('firebase-admin');
 const Chance = require('chance');
-const serviceAccount = require('../project-planner-e362b-firebase-adminsdk-cinue-d354a843b0.json');
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
-const db = admin.firestore();
+const {db} = require('../db/firebase.js')
 const chance = new Chance();
 
-// Generare projects
 const generateProjects = (nrProiecte) => {
   const projects = [];
   for (let i = 0; i < nrProiecte; i++) {
+    const projectId = chance.guid(); 
     const project = {
+      projectId: projectId,
       name: chance.company(),
       description: chance.sentence(),
       startDate: chance.date({ string: true, american: false }),
@@ -23,21 +17,24 @@ const generateProjects = (nrProiecte) => {
   return projects;
 };
 
-// Generare members
-const generateTeamMembers = (nrMembrii) => {
+const generateTeamMembers = (nrMembrii, projects) => {
   const teamMembers = [];
   for (let i = 0; i < nrMembrii; i++) {
+    const project = chance.pickone(projects);
     const membru = {
-      firstname: chance.first(),
-      lastname: chance.last(),
+      name: `${chance.first()} ${chance.last()}`,
+      function: chance.word(),
       email: chance.email(),
+      projectId: project.projectId,
+      projectName: project.name, 
+      projectDescription: project.description, 
+      projectStartDate: project.startDate, 
     };
     teamMembers.push(membru);
   }
   return teamMembers;
 };
 
-// Generare users
 const generateUsers = (nrUtilizatori) => {
   const users = [];
   for (let i = 0; i < nrUtilizatori; i++) {
@@ -50,19 +47,18 @@ const generateUsers = (nrUtilizatori) => {
   return users;
 };
 
-// Adaugă date în Firestore
 const addData = async () => {
   const nrProiecte = 5;
   const nrMembrii = 20;
   const nrUtilizatori = 5;
 
   const projects = generateProjects(nrProiecte);
-  const teamMembers = generateTeamMembers(nrMembrii);
+  const teamMembers = generateTeamMembers(nrMembrii, projects);
   const users = generateUsers(nrUtilizatori);
 
   const projectsCollectionRef = db.collection('projects');
   projects.forEach(async (project) => {
-    const projectDocRef = projectsCollectionRef.doc(); 
+    const projectDocRef = projectsCollectionRef.doc(project.projectId);
     await projectDocRef.set(project);
   });
 
@@ -78,7 +74,7 @@ const addData = async () => {
     await userDocRef.set(user);
   });
 
-  console.log('Data generated and added successfully.');
+  console.log('Data added successfully.');
 };
 
 addData();
