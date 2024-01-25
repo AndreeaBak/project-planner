@@ -3,12 +3,15 @@ const router = express.Router();
 const admin = require('firebase-admin');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const uuid = require('uuid');
+const {validateRegister} = require('../middleware/authMiddleware.js')
 
 const db = admin.firestore();
 
-router.post('/register', async(req,res) => {
+router.post('/register', validateRegister, async(req,res) => {
   try {
     const {email, password} = req.body;
+
     const hashedPassword = await bcrypt.hash(password, 10);
     
     let docRef=db.collection('users').doc();
@@ -18,11 +21,13 @@ router.post('/register', async(req,res) => {
       password: hashedPassword,
     })
 
-    res.json({message: 'User added successfully'});
+    return res.status(201).send({
+      message: 'Registered!',
+    });
 
   } catch(error){
     console.error('Unable to add new user:', error);
-    res.status(500).send('Unable to add new user.');
+    return res.status(500).send('Unable to add new user.');
   }
 });
 
@@ -49,7 +54,12 @@ router.post('/login', async(req, res)=>{
       expiresIn: '24h',
     });
 
-    res.status(200).json({ token });
+    return res.status(200).send({
+      message: 'Logged in!',
+      token,
+      user: user
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Login failed' });
