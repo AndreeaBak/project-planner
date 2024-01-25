@@ -18,7 +18,6 @@ app.use('/', authRoutes);
 app.use('/api/projects', projectsRoutes);
 app.use('/api/teamMembers', teamMembersRoutes);
 
-//Start server
 app.listen(port, () => {
   console.log(`Server listen on port ${port}`);
 });
