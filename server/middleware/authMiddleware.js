@@ -1,18 +1,33 @@
 const jwt = require('jsonwebtoken');
 
 function verifyToken(req, res, next) {
-  const token = req.header('Authorization').split(" ")[1];
-  if (!token) 
-    return res.status(401).json({ error: 'Access denied' });
-
-  try {
-    const decoded = jwt.verify(token, 'secret-key');
-    req.userId = decoded.userId;
-    next();
-
-  } catch (error) {
-  res.status(401).json({ error: 'Invalid token' });
+  if (!req.headers.authorization) {
+    return res.status(400).send({
+      message: 'Your session is not valid!',
+    });
   }
-};
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, 'secret-key');
+    req.userData = decoded;
+    next();
+  } catch (err) {
+    return res.status(400).send({
+      message: 'Your session is not valid!',
+    });
+  }
 
-module.exports = verifyToken;
+}
+
+function validateRegister(req, res, next) {
+  if (!req.body.password || req.body.password.length < 8) {
+    return res.status(400).send({
+      message: 'Please enter a password with min. 8 chars',
+    });
+  }
+  next();
+}
+
+
+module.exports = {verifyToken, validateRegister};
