@@ -7,9 +7,13 @@
       <br />
       <label>Password:</label>
       <input v-model="password" type="password" required />
-      <span v-if="password && password.length < 8" class="error">Password must be at least 8 characters long.</span>
+      <span v-if="password && password.length < 8" class="error"
+        >Password must be at least 8 characters long.</span
+      >
       <br />
-      <h3>Already have an account? <router-link to="/login">Login</router-link></h3>
+      <h3>
+        Already have an account? <router-link to="/login">Login</router-link>
+      </h3>
       <button type="submit" class="register-btn">Register</button>
     </form>
   </div>
@@ -19,23 +23,21 @@
 export default {
   data() {
     return {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     };
   },
   methods: {
     async register() {
       try {
-        await this.$axios
-        .post('/register', {
+        await this.$axios.post("/register", {
           email: this.email,
           password: this.password,
-        })
-        
+        });
 
-        this.$router.push('/login');
+        this.$router.push("/login");
       } catch (error) {
-        console.error('Registration failed:', error);
+        console.error("Registration failed:", error);
       }
     },
   },

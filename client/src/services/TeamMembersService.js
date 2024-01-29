@@ -9,13 +9,13 @@ export default {
   getTeamMember(id) {
     return axios.get(`${apiUrl}/${id}`);
   },
-  addTeamMember(newTeamMember) {
-    return axios.post(apiUrl, newTeamMember);
+  addTeamMember(projectId, newTeamMember) {
+    return axios.post(`${apiUrl}/${projectId}/teamMembers`, newTeamMember);
   },
   editTeamMember(id, updatedTeamMember) {
     return axios.put(`${apiUrl}/${id}`, updatedTeamMember);
   },
-  deleteTeamMember(id) {
-    return axios.delete(`${apiUrl}/${id}`);
+  deleteTeamMember(projectId, id) {
+    return axios.delete(`${apiUrl}/${projectId}/teamMembers/${id}`);
   },
 };

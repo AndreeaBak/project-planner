@@ -4,7 +4,9 @@
       <router-link to="/">Projects</router-link>
       <router-link to="/teamMembers">Team Members</router-link>
       <router-link v-if="!isAuthenticated" to="/login">Login</router-link>
-      <button v-if="isAuthenticated" @click="logout" class="logout-btn">Logout</button>
+      <button v-if="isAuthenticated" @click="logout" class="logout-btn">
+        Logout
+      </button>
     </nav>
   </header>
 </template>
@@ -18,8 +20,8 @@ export default {
   },
   methods: {
     logout() {
-      this.$store.dispatch('logout');
-      this.$router.push('/');
+      this.$store.dispatch("logout");
+      this.$router.push("/");
     },
   },
 };

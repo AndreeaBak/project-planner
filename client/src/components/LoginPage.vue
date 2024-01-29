@@ -8,8 +8,13 @@
       <label>Password:</label>
       <input v-model="password" type="password" required />
       <br />
-      <span v-if="userNotFound" class="error">Invalid email address or password.</span>
-      <h3>Don't have an account? <router-link to="/register">Register</router-link></h3>
+      <span v-if="userNotFound" class="error"
+        >Invalid email address or password.</span
+      >
+      <h3>
+        Don't have an account?
+        <router-link to="/register">Register</router-link>
+      </h3>
       <button type="submit" class="login-btn">Login</button>
     </form>
   </div>
@@ -19,35 +24,30 @@
 export default {
   data() {
     return {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
       userNotFound: false,
     };
   },
   methods: {
     async login() {
       try {
-        const response = await this.$axios
-        .post('/login', {
+        const response = await this.$axios.post("/login", {
           email: this.email,
           password: this.password,
-        })
-
-        if (response.status === 404 || response.data.error === 'Invalid email address or password') {
-          this.userNotFound = true;
-          return;
-        }
+        });
 
         this.userNotFound = false;
 
         const token = response.data.token;
 
-        this.$store.dispatch('login', token);
-        localStorage.setItem('token', token);
+        this.$store.dispatch("login", token);
+        localStorage.setItem("token", token);
 
-        this.$router.push('/');
+        this.$router.push("/");
       } catch (error) {
-        console.error('Login failed:', error);
+        this.userNotFound = true;
+        console.error("Login failed:", error);
       }
     },
   },
@@ -76,11 +76,14 @@ export default {
 
 @media only screen and (min-width: 601px) and (max-width: 1024px) {
   .login-form {
-   padding: 12px;
+    padding: 12px;
   }
 }
 
-
+.error {
+  color: #ff6961;
+  font-weight: bold;
+}
 
 label {
   display: block;

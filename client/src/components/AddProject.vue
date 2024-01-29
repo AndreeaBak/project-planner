@@ -3,14 +3,17 @@
     <h2>Add a new project</h2>
     <form @submit.prevent="addProject">
       <label for="name">Project name:</label>
-      <input type="text" id="name" v-model="newProject.name" required>
+      <input type="text" id="name" v-model="newProject.name" required />
 
       <label for="description">Description:</label>
-      <textarea id="description" v-model="newProject.description" required></textarea>
+      <textarea
+        id="description"
+        v-model="newProject.description"
+        required
+      ></textarea>
 
-       <label for="date">Date:</label>
-      <input type="date" id="date" v-model="newProject.date" required>
-
+      <label for="date">Date:</label>
+      <input type="date" id="date" v-model="newProject.date" required />
 
       <button type="submit">Add</button>
     </form>
@@ -18,30 +21,30 @@
 </template>
 
 <script>
-import ProjectService from '../services/ProjectService';
+import ProjectService from "../services/ProjectService";
 
 export default {
   data() {
     return {
       newProject: {
-        name: '',
-        description: '',
+        name: "",
+        description: "",
       },
     };
   },
   methods: {
     addProject() {
       ProjectService.addProject(this.newProject)
-        .then(response => {
+        .then((response) => {
           console.log(response.data.message);
           this.newProject = {
-            name: '',
-            description: '',
-            date:'',
+            name: "",
+            description: "",
+            date: "",
           };
         })
-        .catch(error => {
-          console.error('Eroare la adăugarea proiectului:', error);
+        .catch((error) => {
+          console.error("Eroare la adăugarea proiectului:", error);
         });
     },
   },
@@ -49,5 +52,4 @@ export default {
 </script>
 
 <style scoped>
-
 </style>

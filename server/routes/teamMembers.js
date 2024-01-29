@@ -1,124 +1,210 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const admin = require('firebase-admin');
-const {verifyToken} = require('../middleware/authMiddleware.js')
+const admin = require("firebase-admin");
+const { verifyToken } = require("../middleware/authMiddleware.js");
 
 const db = admin.firestore();
 
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const teamSnapshot = await db.collection('team').get();
+    const projectsSnapshot = await db.collection("projects").get();
     const team = [];
-    teamSnapshot.forEach((doc) => {
-      team.push({
-        id: doc.id,
-        ...doc.data()
-      });
+    const promises = [];
+
+    projectsSnapshot.forEach((projectDoc) => {
+      const teamMembersRef = projectDoc.ref.collection("teamMembers");
+
+      promises.push(
+        teamMembersRef.get().then((teamMembersSnapshot) => {
+          teamMembersSnapshot.forEach((teamMemberDoc) => {
+            team.push({
+              projectId: projectDoc.id,
+              teamMemberId: teamMemberDoc.id,
+              ...teamMemberDoc.data(),
+            });
+          });
+        })
+      );
     });
+
+    await Promise.all(promises);
+
     res.json(team);
   } catch (error) {
-    console.error('Error getting team member:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Error getting team members:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get("/:projectId/teamMembers", async (req, res) => {
   try {
-    const teamId = req.params.id;
-    const teamDoc = await db.collection('team').doc(teamId).get();
+    const projectId = req.params.projectId;
+    const projectRef = db.collection("projects").doc(projectId);
+    const teamMembersRef = projectRef.collection("teamMembers");
 
-    if (!teamDoc.exists) {
-      return res.status(404).send('Team member not found');
-    }
+    const teamMembersSnapshot = await teamMembersRef.get();
+    const promises = [];
 
-    const teamData = {
-      id: teamDoc.id,
-      ...teamDoc.data()
-    };
+    teamMembersSnapshot.forEach((teamMemberDoc) => {
+      const teamMemberData = {
+        projectId: projectId,
+        teamMemberId: teamMemberDoc.id,
+        ...teamMemberDoc.data(),
+      };
+      promises.push(teamMemberData);
+    });
 
-    res.json(teamData);
+    const team = await Promise.all(promises);
+
+    res.json(team);
   } catch (error) {
-    console.error('Error getting team member by ID:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Error getting team members for project:", error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
-router.post('/', verifyToken, async(req,res)=> {
-  try{
-    let docRef=db.collection('team').doc();
-    const projectId = req.body.projectId;
-    let projectData = { projectName: null, projectDescription: null, projectStartDate: null };
+router.get("/:teamMemberId", async (req, res) => {
+  try {
+    const teamMemberId = req.params.teamMemberId;
+    const projectsSnapshot = await db.collection("projects").get();
 
-    if (projectId) {
-      const projectDoc = await db.collection('projects').doc(projectId).get();
+    let teamMemberData = null;
+    const promises = [];
 
-      if (projectDoc.exists) {
-        projectData= {
-          projectName: projectDoc.data().name,
-          projectDescription: projectDoc.data().description,
-          projectStartDate: projectDoc.data().startDate,
-        }
+    projectsSnapshot.forEach((projectDoc) => {
+      const teamMemberRef = projectDoc.ref
+        .collection("teamMembers")
+        .doc(teamMemberId);
+
+      promises.push(
+        teamMemberRef.get().then((teamMemberDoc) => {
+          if (teamMemberDoc.exists) {
+            teamMemberData = {
+              projectId: projectDoc.id,
+              teamMemberId: teamMemberDoc.id,
+              ...teamMemberDoc.data(),
+            };
+          }
+        })
+      );
+    });
+
+    await Promise.all(promises);
+
+    if (teamMemberData) {
+      res.json(teamMemberData);
+    } else {
+      res.status(404).json({ message: "Team member not found" });
+    }
+  } catch (error) {
+    console.error("Error getting team member by ID:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+router.post("/:projectId/teamMembers", verifyToken, async (req, res) => {
+  try {
+    const projectId = req.params.projectId;
+    const projectRef = db.collection("projects").doc(projectId);
+    const projectDoc = await projectRef.get();
+    const projectName = projectDoc.data().name;
+
+    const teamMembersData = Array.isArray(req.body) ? req.body : [req.body];
+
+    const teamMembersPromises = teamMembersData.map(async (teamMember) => {
+      if (!teamMember.name || !teamMember.function || !teamMember.email) {
+        return res
+          .status(400)
+          .json({ message: "Team member must contain all required data." });
       }
-    }
-    
-    if(!req.body.name || !req.body.function || !req.body.email){
-      res.json({message: 'Team member data incomplete.'});
-    }
 
-    await docRef.set({
-      name: req.body.name,
-      function: req.body.function,
-      email: req.body.email,
-      projectId,
-      ...projectData
-    })
+      const teamMemberData = {
+        ...teamMember,
+        projectId: projectId,
+        projectName: projectName,
+      };
 
-    res.json({message: 'Team member added successfully'});
+      const docRef = await projectRef
+        .collection("teamMembers")
+        .add(teamMemberData);
 
-  } catch(error){
-    console.error('Unable to push new Team member:', error);
-    res.status(500).send('Unable to push new Team member.');
-  }
-})
+      const memberId = docRef.id;
 
-router.put('/:id', verifyToken, async(req,res)=> {
-  try{
-    const id = req.params.id;
-    let docRef = db.collection('team').doc(id);
+      projectDoc.ref.update({
+        [`teamMembers.${memberId}`]: teamMemberData,
+      });
 
-    if(!req.body.name || !req.body.function || !req.body.email){
-      res.json({message: 'Team member data incomplete.'});
-    }
-    
-    await docRef.update({
-      name: req.body.name,
-      function: req.body.function,
-      email: req.body.email,
-      projectId: req.body.projectId
-    })
+      return memberId;
+    });
 
-  } catch(error){
-    console.error('Unable to update the Team member:', error);
-    res.status(500).send('Unable to update the Team member.');
-  }
-})
+    const teamMembersIds = await Promise.all(teamMembersPromises);
 
-router.delete('/:id', verifyToken, async (req, res) => {
-  try {
-    const teamId = req.params.id;
-    const teamDoc = db.collection('team').doc(teamId);
-    const snapshot = await teamDoc.get();
-
-    if (!snapshot.exists) {
-      return res.status(404).send('Team member not found');
-    }
-
-    await teamDoc.delete();
-    res.send('Team member deleted successfully');
+    res.json({
+      message: "Team members added successfully",
+      ids: teamMembersIds,
+    });
   } catch (error) {
-    console.error('Error deleting Team member:', error);
-    res.status(500).send('Internal Server Error');
+    console.error("Unable to add new team members to project:", error);
+    res.status(500).send("Unable to add new team members to project.");
   }
 });
+
+router.put(
+  "/:projectId/teamMembers/:teamMemberId",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const projectId = req.params.projectId;
+      const teamMemberId = req.params.teamMemberId;
+      const projectRef = db.collection("projects").doc(projectId);
+      const teamMemberRef = projectRef
+        .collection("teamMembers")
+        .doc(teamMemberId);
+
+      const teamMemberDoc = await teamMemberRef.get();
+      if (!teamMemberDoc.exists) {
+        return res
+          .status(404)
+          .json({ message: "Team member not found in project" });
+      }
+
+      await teamMemberRef.update(req.body);
+
+      res.json({ message: "Team member updated successfully" });
+    } catch (error) {
+      console.error("Error updating team member:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
+
+router.delete(
+  "/:projectId/teamMembers/:teamMemberId",
+  verifyToken,
+  async (req, res) => {
+    try {
+      const projectId = req.params.projectId;
+      const teamMemberId = req.params.teamMemberId;
+      const projectRef = db.collection("projects").doc(projectId);
+      const teamMemberRef = projectRef
+        .collection("teamMembers")
+        .doc(teamMemberId);
+
+      const teamMemberDoc = await teamMemberRef.get();
+      if (!teamMemberDoc.exists) {
+        return res
+          .status(404)
+          .json({ message: "Team member not found in project" });
+      }
+
+      await teamMemberRef.delete();
+
+      res.json({ message: "Team member deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting team member:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+);
 
 module.exports = router;
