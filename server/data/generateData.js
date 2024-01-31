@@ -40,6 +40,7 @@ const generateTeamMembers = (nrMembrii, projects) => {
     const memberId = chance.guid();
     const memberFunction = chance.pickone(functions);
     const teamMember = {
+      id: memberId,
       name: `${chance.first()} ${chance.last()}`,
       function: memberFunction,
       email: chance.email(),
@@ -51,6 +52,7 @@ const generateTeamMembers = (nrMembrii, projects) => {
   }
   return teamMembers;
 };
+
 
 const generateUsers = (nrUtilizatori) => {
   const users = [];
@@ -77,13 +79,17 @@ const addData = async () => {
   const usersCollectionRef = db.collection("users");
 
   const projectsPromises = projects.map(async (project) => {
-    const projectDocRef = await db.collection("projects").add(project);
+    const projectDocRef = await db.collection("projects").doc(project.projectId).set(project);
+    const teamMembersCollectionRef = db.collection("projects").doc(project.projectId).collection("teamMembers");
+  
     await Promise.all(
-      Object.values(project.teamMembers).map(async (teamMember) => {
-        await projectDocRef.collection("teamMembers").add(teamMember);
-      })
+        Object.entries(project.teamMembers).map(async ([teamMemberId, teamMemberData]) => {
+            const teamMemberRef = teamMembersCollectionRef.doc(teamMemberId);
+            await teamMemberRef.set(teamMemberData);
+        })
     );
-  });
+});
+
 
   const usersPromises = users.map(async (user) => {
     await db.collection("users").add(user);
@@ -92,5 +98,6 @@ const addData = async () => {
   await Promise.all([...projectsPromises, ...usersPromises]);
   console.log("Data added successfully");
 };
+
 
 addData();

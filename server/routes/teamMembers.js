@@ -4,6 +4,7 @@ const admin = require("firebase-admin");
 const { verifyToken } = require("../middleware/authMiddleware.js");
 
 const db = admin.firestore();
+const FieldValue = admin.firestore.FieldValue;
 
 router.get("/", async (req, res) => {
   try {
@@ -19,7 +20,6 @@ router.get("/", async (req, res) => {
           teamMembersSnapshot.forEach((teamMemberDoc) => {
             team.push({
               projectId: projectDoc.id,
-              teamMemberId: teamMemberDoc.id,
               ...teamMemberDoc.data(),
             });
           });
@@ -48,7 +48,6 @@ router.get("/:projectId/teamMembers", async (req, res) => {
     teamMembersSnapshot.forEach((teamMemberDoc) => {
       const teamMemberData = {
         projectId: projectId,
-        teamMemberId: teamMemberDoc.id,
         ...teamMemberDoc.data(),
       };
       promises.push(teamMemberData);
@@ -81,7 +80,6 @@ router.get("/:teamMemberId", async (req, res) => {
           if (teamMemberDoc.exists) {
             teamMemberData = {
               projectId: projectDoc.id,
-              teamMemberId: teamMemberDoc.id,
               ...teamMemberDoc.data(),
             };
           }
@@ -196,6 +194,10 @@ router.delete(
           .status(404)
           .json({ message: "Team member not found in project" });
       }
+
+      await projectRef.update({
+        [`teamMembers.${teamMemberId}`]: FieldValue.delete()
+      });
 
       await teamMemberRef.delete();
 
