@@ -17,26 +17,14 @@
         <h3 class="section-title">Team Members</h3>
         <ul class="team-members-list">
           <h3 class="team-member-header">Name - Role - Email</h3>
-          <div v-if="teamMembers.some(member => member.projectName === projectDetails.name)">
-
-          <li
-            v-for="member in teamMembers"
-            :key="member.id"
-            class="team-member"
-          >
-            {{ member.name }} - {{ member.function }} - {{ member.email }} - {{member.id}}
+          <li v-for="member in filteredTeamMembers" :key="member.id" class="team-member">
+            {{ member.name }}  -  {{ member.function }}  -   {{ member.email }}
             <div class="action-buttons">
-              <button
-                v-if="isAuthenticated"
-                @click="deleteTeamMember(member.id)"
-                class="delete-btn"
-              >
-                Delete
-              </button>
+              <button v-if="isAuthenticated" @click="deleteTeamMember(member.id)" class="delete-btn">Delete</button>
             </div>
           </li>
-          </div>
         </ul>
+
 
         <form
           v-if="isAuthenticated"
@@ -146,10 +134,8 @@ export default {
   },
   computed: {
     filteredTeamMembers() {
-      const projectId = this.$route.params.id;
-      return this.teamMembers.filter(
-        (member) => member.projectId === projectId
-      );
+          const projectId = this.$route.params.id;
+          return this.teamMembers.filter(member => member.projectId === projectId);
     },
 
     isAuthenticated() {
@@ -159,14 +145,8 @@ export default {
 
   created() {
     const projectId = this.$route.params.id;
-    ProjectService.getProject(projectId)
-      .then((response) => {
-        this.projectDetails = response.data;
-        this.fetchTeamMembers();
-      })
-      .catch((error) => {
-        console.error("Error fetching projects:", error);
-      });
+    this.fetchProjectDetails(projectId);
+    this.fetchTeamMembers();
   },
 
   methods: {
@@ -179,6 +159,7 @@ export default {
       try {
         const response=await ProjectService.getProject(id);
         this.projectDetails=response.data;
+        
       } catch(error) {
         console.error("Error fetching projects:", error);
       }
@@ -187,7 +168,13 @@ export default {
     async editingProject() {
       const projectId = this.$route.params.id;
       try {
-        await ProjectService.editProject(projectId, this.editedProject);
+        const oldProjectName = this.projectDetails.name;
+        const response = await ProjectService.editProject(projectId, this.editedProject);
+        this.teamMembers.forEach(member => {
+          if(this.teamMembers.projectName === oldProjectName)
+           member.projectName = response.data.name;
+      });
+
         this.fetchProjectDetails(projectId);
         this.isEditing=false;
       } catch (error) {
@@ -224,6 +211,7 @@ export default {
           name: this.newMember.name,
           function: this.newMember.function,
           email: this.newMember.email,
+          projectId: projectId,
         };
 
         const response = await TeamMembersService.addTeamMember(

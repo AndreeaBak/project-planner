@@ -12,8 +12,8 @@ export default {
   addTeamMember(projectId, newTeamMember) {
     return axios.post(`${apiUrl}/${projectId}/teamMembers`, newTeamMember);
   },
-  editTeamMember(id, updatedTeamMember) {
-    return axios.put(`${apiUrl}/${id}`, updatedTeamMember);
+  editTeamMember(projectId, id, updatedTeamMember) {
+    return axios.put(`${apiUrl}/${projectId}/teamMembers/${id}`, updatedTeamMember);
   },
   deleteTeamMember(projectId, id) {
     return axios.delete(`${apiUrl}/${projectId}/teamMembers/${id}`);

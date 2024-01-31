@@ -23,14 +23,45 @@
           <h3>{{ member.name }}</h3>
           <p>function: {{ member.function }}</p>
           <p class="email">email: {{ member.email }}</p>
-          <h3>project: {{ member.projectName }}</h3>
+          <router-link
+            v-if="member.projectName"
+            :to="{ name: 'project-details', params: { id: member.projectId } }"
+            class="project-link"
+          >
+            project: {{ member.projectName }}
+          </router-link>
         </div>
 
         <div class="member-actions" v-if="isAuthenticated">
-          <button @click="deleteMember(member.id)" class="delete-btn">
+          <button
+            @click="deleteMember(member.projectId, member.id)"
+            class="delete-btn"
+          >
             Delete
           </button>
+          <button @click="editMember(member.id)" class="edit-btn">Edit</button>
         </div>
+      </div>
+    </div>
+    <div v-if="showEditPopup && isAuthenticated" class="popup">
+      <div class="popup-content">
+        <h2>Edit Team Member</h2>
+        <form @submit.prevent="updateMember" class="edit-form">
+          <label for="edit-name">Name:</label>
+          <input v-model="editMemberData.name" required id="edit-name" />
+          <label for="edit-function">Function:</label>
+          <input
+            v-model="editMemberData.function"
+            required
+            id="edit-function"
+          />
+          <label for="edit-email">Email:</label>
+          <input v-model="editMemberData.email" required id="edit-email" />
+          <div class="buttons">
+            <button type="submit" class="update-btn">Update</button>
+            <button @click="closeEditPopup" class="cancel-btn">Cancel</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -38,15 +69,19 @@
 
 <script>
 import TeamMembersService from "../services/TeamMembersService";
-import ProjectService from "../services/ProjectService";
 
 export default {
   data() {
     return {
       teamMembers: [],
-      projectDetails: [],
       sortDirection: "asc",
-      projectId: null
+      showEditPopup: false,
+      editMemberData: {
+        id: null,
+        name: "",
+        function: "",
+        email: "",
+      },
     };
   },
   computed: {
@@ -64,20 +99,6 @@ export default {
     this.fetchTeamMembers();
   },
   methods: {
-    async fetchProjectDetails(id) {
-      try {
-        const response = await ProjectService.getProject(id);
-        const projectData = response.data;
-
-        this.projectId = response.data.id;
-
-        this.projectDetails = projectData;
-
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    },
-
     async fetchTeamMembers() {
       try {
         const response = await TeamMembersService.getTeamMembers();
@@ -86,24 +107,59 @@ export default {
         console.error("Error fetching team members:", error);
       }
     },
+    async editMember(id) {
+      try {
+        // Afișează pop-up-ul de editare
+        this.showEditPopup = true;
 
-    async deleteMember(teamMemberId) {
-  try {
-    this.fetchProjectDetails();
-    if (!this.projectDetails.id) {
-      console.error("Project ID is not available.");
-      return;
-    }
-    await TeamMembersService.deleteTeamMember(this.projectDetails.id, teamMemberId);
-    this.teamMembers = this.teamMembers.filter(
-      (member) => member.id !== teamMemberId
-    );
-  } catch (error) {
-    console.error("Error deleting team member:", error);
-  }
-},
+        // Obține datele membrului echipei pentru editare
+        const member = this.teamMembers.find((member) => member.id === id);
 
+        // Populează datele membrului echipei în formularul de editare
+        this.editMemberData = {
+          id: member.id,
+          name: member.name,
+          function: member.function,
+          email: member.email,
+          projectId: member.projectId,
+        };
+      } catch (error) {
+        console.error("Error editing team member:", error);
+      }
+    },
+    async updateMember() {
+      try {
+        // Trimite datele actualizate către serviciul pentru actualizare
+        await TeamMembersService.editTeamMember(
+          this.editMemberData.projectId,
+          this.editMemberData.id,
+          this.editMemberData
+        );
 
+        // Închide pop-up-ul de editare
+        this.showEditPopup = false;
+
+        // Actualizează lista membrilor echipei pentru a reflecta modificările
+        this.fetchTeamMembers();
+      } catch (error) {
+        console.error("Error updating team member:", error);
+      }
+    },
+    closeEditPopup() {
+      // Închide pop-up-ul de editare fără a face actualizări
+      this.showEditPopup = false;
+    },
+    async deleteMember(projectId, id) {
+      try {
+        await TeamMembersService.deleteTeamMember(projectId, id);
+        this.teamMembers = this.teamMembers.filter(
+          (teamMembers) => teamMembers.id !== id
+        );
+      } catch (error) {
+        console.log(id);
+        console.error("Error deleting team members:", error);
+      }
+    },
     sortMembers() {
       this.sortedMembers;
     },
@@ -177,6 +233,13 @@ a.project-link {
   color: black;
 }
 
+a.project-link:hover {
+  text-decoration: none;
+  font-weight: bold;
+  color: black;
+  font-size: 17px;
+}
+
 .edit-btn,
 .delete-btn {
   background-color: #3498db;
@@ -202,5 +265,55 @@ a.project-link:hover {
   font-weight: bold;
   color: black;
   font-size: 17px;
+}
+
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.edit-form label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.edit-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.buttons button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.update-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
 }
 </style>
