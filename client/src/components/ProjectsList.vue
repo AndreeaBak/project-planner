@@ -240,5 +240,93 @@ input {
 .date-input {
   margin-bottom: 15px;
 }
+
+@media only screen and (max-width: 600px) {
+
+.projects-container {
+  margin: 5px auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 500px;
+}
+
+.projects-container h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.project-item {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.project-link {
+  color: black;
+  text-decoration: none;
+}
+
+.project-link:hover {
+  text-decoration: underline;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.add-form {
+  margin: 0 auto;
+  max-width: 400px; 
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+}
+
+.name-input,
+.desc-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.add-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.add-btn:hover {
+  background-color: #0056b3;
+}
+
+}
 </style>
 

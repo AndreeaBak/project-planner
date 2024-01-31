@@ -17,14 +17,23 @@
         <h3 class="section-title">Team Members</h3>
         <ul class="team-members-list">
           <h3 class="team-member-header">Name - Role - Email</h3>
-          <li v-for="member in filteredTeamMembers" :key="member.id" class="team-member">
-            {{ member.name }}  -  {{ member.function }}  -   {{ member.email }}
+          <li
+            v-for="member in filteredTeamMembers"
+            :key="member.id"
+            class="team-member"
+          >
+            {{ member.name }} - {{ member.function }} - {{ member.email }}
             <div class="action-buttons">
-              <button v-if="isAuthenticated" @click="deleteTeamMember(member.id)" class="delete-btn">Delete</button>
+              <button
+                v-if="isAuthenticated"
+                @click="deleteTeamMember(member.id)"
+                class="delete-btn"
+              >
+                Delete
+              </button>
             </div>
           </li>
         </ul>
-
 
         <form
           v-if="isAuthenticated"
@@ -134,8 +143,10 @@ export default {
   },
   computed: {
     filteredTeamMembers() {
-          const projectId = this.$route.params.id;
-          return this.teamMembers.filter(member => member.projectId === projectId);
+      const projectId = this.$route.params.id;
+      return this.teamMembers.filter(
+        (member) => member.projectId === projectId
+      );
     },
 
     isAuthenticated() {
@@ -157,10 +168,9 @@ export default {
 
     async fetchProjectDetails(id) {
       try {
-        const response=await ProjectService.getProject(id);
-        this.projectDetails=response.data;
-        
-      } catch(error) {
+        const response = await ProjectService.getProject(id);
+        this.projectDetails = response.data;
+      } catch (error) {
         console.error("Error fetching projects:", error);
       }
     },
@@ -169,14 +179,17 @@ export default {
       const projectId = this.$route.params.id;
       try {
         const oldProjectName = this.projectDetails.name;
-        const response = await ProjectService.editProject(projectId, this.editedProject);
-        this.teamMembers.forEach(member => {
-          if(this.teamMembers.projectName === oldProjectName)
-           member.projectName = response.data.name;
-      });
+        const response = await ProjectService.editProject(
+          projectId,
+          this.editedProject
+        );
+        this.teamMembers.forEach((member) => {
+          if (this.teamMembers.projectName === oldProjectName)
+            member.projectName = response.data.name;
+        });
 
         this.fetchProjectDetails(projectId);
-        this.isEditing=false;
+        this.isEditing = false;
       } catch (error) {
         console.error("Error editing project:", error);
       }
@@ -340,5 +353,86 @@ input {
 .add-member-form label,
 .add-member-form input {
   width: auto;
+}
+
+@media only screen and (max-width: 600px) {
+
+.project-details-container {
+  margin: 5px auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 600px; 
+}
+
+.section-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.project-details {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.project-info h3 {
+  margin-bottom: 10px;
+}
+
+.project-description,
+.project-start-date {
+  margin-bottom: 10px;
+}
+
+.team-section {
+  margin-top: 20px;
+}
+
+.team-member-header {
+  font-weight: bold;
+}
+
+.team-member {
+  margin-top: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.add-member-form,
+.edit-project-form {
+  margin-top: 20px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.form-group {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.add-btn,
+.edit-btn {
+  margin-top: 20px;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.add-btn:hover,
+.edit-btn:hover {
+  background-color: #0056b3;
+}
+
 }
 </style>

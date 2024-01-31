@@ -109,13 +109,10 @@ export default {
     },
     async editMember(id) {
       try {
-        // Afișează pop-up-ul de editare
         this.showEditPopup = true;
 
-        // Obține datele membrului echipei pentru editare
         const member = this.teamMembers.find((member) => member.id === id);
 
-        // Populează datele membrului echipei în formularul de editare
         this.editMemberData = {
           id: member.id,
           name: member.name,
@@ -129,24 +126,20 @@ export default {
     },
     async updateMember() {
       try {
-        // Trimite datele actualizate către serviciul pentru actualizare
         await TeamMembersService.editTeamMember(
           this.editMemberData.projectId,
           this.editMemberData.id,
           this.editMemberData
         );
 
-        // Închide pop-up-ul de editare
         this.showEditPopup = false;
 
-        // Actualizează lista membrilor echipei pentru a reflecta modificările
         this.fetchTeamMembers();
       } catch (error) {
         console.error("Error updating team member:", error);
       }
     },
     closeEditPopup() {
-      // Închide pop-up-ul de editare fără a face actualizări
       this.showEditPopup = false;
     },
     async deleteMember(projectId, id) {
@@ -281,7 +274,9 @@ a.project-link:hover {
 
 .popup-content {
   background-color: white;
-  padding: 20px;
+  padding: 50px;
+  padding-top: 40px;
+  padding-right: 55px;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
@@ -315,5 +310,142 @@ a.project-link:hover {
 .cancel-btn {
   background-color: #f44336;
   color: white;
+}
+
+@media only screen and (max-width: 600px) {
+
+.team-members-page {
+  margin: 5px auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 600px; 
+}
+
+.page-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.sort-label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.sort-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.team-members-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.team-member-card {
+  width: calc(100% - 10px); 
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.member-info h3 {
+  margin-bottom: 10px;
+}
+
+.member-info p {
+  margin-bottom: 5px;
+}
+
+.email {
+  font-style: italic;
+}
+
+.member-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%; /* Setează lățimea popup-ului la 80% din lățimea ferestrei */
+  max-width: 400px; /* Ajustează lățimea maximă a popup-ului la dimensiunea dorită */
+}
+
+.popup-content h2 {
+  margin-bottom: 10px;
+}
+
+.edit-form {
+  margin-top: 20px;
+}
+
+.edit-form label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.edit-form input {
+  width: 60%;
+  padding: 10px;
+  padding-right: 2px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.update-btn,
+.cancel-btn {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.update-btn {
+  background-color: #007bff;
+  color: #fff;
+  margin-right: 10px;
+}
+
+.cancel-btn {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+@media only screen and (min-width: 601px) and (max-width: 1024px) {
+  .team-members-page {
+    max-width: 600px;
+  }
+
+  .popup-content {
+    width: 70%; 
+    max-width: 600px; 
+  }
+}
+
 }
 </style>

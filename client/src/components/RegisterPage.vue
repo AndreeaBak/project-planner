@@ -85,4 +85,59 @@ input {
   font-size: 14px;
   margin-top: 5px;
 }
+
+@media only screen and (max-width: 600px) {
+  .register-container {
+    margin: 50px auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+  }
+
+  .register-form {
+    margin-top: 20px;
+  }
+
+  .register-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  .register-form input[type="email"],
+  .register-form input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .register-form .error {
+    color: red;
+  }
+
+  .register-form h3 {
+    margin-top: 15px;
+    font-size: 16px;
+  }
+
+  .register-form button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .register-form button:hover {
+    background-color: #0056b3;
+  }
+}
 </style>
