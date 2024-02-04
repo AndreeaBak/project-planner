@@ -108,7 +108,6 @@ router.post("/:projectId/teamMembers", verifyToken, async (req, res) => {
     const projectName = projectDoc.data().name;
 
     const teamMembersData = Array.isArray(req.body) ? req.body : [req.body];
-
     const teamMembersPromises = teamMembersData.map(async (teamMember) => {
       if (!teamMember.name || !teamMember.function || !teamMember.email) {
         return res
@@ -116,20 +115,23 @@ router.post("/:projectId/teamMembers", verifyToken, async (req, res) => {
           .json({ message: "Team member must contain all required data." });
       }
 
-      const teamMemberData = {
-        ...teamMember,
-        projectId: projectId,
-        projectName: projectName,
-      };
-
       const docRef = await projectRef
         .collection("teamMembers")
-        .add(teamMemberData);
+        .add({
+          ...teamMember,
+          projectId: projectId,
+          projectName: projectName,
+        });
 
       const memberId = docRef.id;
 
       projectDoc.ref.update({
-        [`teamMembers.${memberId}`]: teamMemberData,
+        [`teamMembers.${memberId}`]: {
+          ...teamMember,
+          id: memberId,
+          projectId: projectId,
+          projectName: projectName,
+        },
       });
 
       return memberId;
@@ -146,6 +148,7 @@ router.post("/:projectId/teamMembers", verifyToken, async (req, res) => {
     res.status(500).send("Unable to add new team members to project.");
   }
 });
+
 
 router.put(
   "/:projectId/teamMembers/:teamMemberId",

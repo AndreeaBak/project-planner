@@ -21,7 +21,7 @@ router.get("/", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
-
+ 
 router.get("/:id", async (req, res) => {
   try {
     const projectId = req.params.id;
