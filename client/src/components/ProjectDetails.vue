@@ -26,7 +26,7 @@
             <div class="action-buttons">
               <button
                 v-if="isAuthenticated"
-                @click="deleteTeamMember(member.id)"
+                @click="deleteMember(member.id)"
                 class="delete-btn"
               >
                 Delete
@@ -204,7 +204,9 @@ export default {
       }
     },
 
-    async deleteTeamMember(id) {
+    async deleteMember(id) {
+      
+        console.log("ceva");
       try {
         const projectId = this.$route.params.id;
         await TeamMembersService.deleteTeamMember(projectId, id);
@@ -219,6 +221,7 @@ export default {
 
     async addTeamMember() {
       try {
+        this.fetchTeamMembers();
         const projectId = this.$route.params.id;
         const newTeamMember = {
           name: this.newMember.name,
