@@ -42,9 +42,9 @@
     </div>
 
     <div class="pagination">
-      <button :disabled="currentPage === 1" @click="prevPage">Previous</button>
-      <span>{{ currentPage }}</span>
-      <button :disabled="currentPage === totalPages" @click="nextPage">Next</button>
+      <button :disabled="currentPage === 1" @click="prevPage" class="pagination-btn">Previous</button>
+      <span class="pagination-current">{{ currentPage }}</span>
+      <button :disabled="currentPage === totalPages" @click="nextPage" class="pagination-btn">Next</button>
     </div>
   </div>
 </template>
@@ -79,7 +79,7 @@ export default {
       return this.teamMembers.slice(start, end);
     },
     membersPerPage() {
-      return window.innerWidth < 768 ? 3 : 9;
+      return window.innerWidth < 768 ? 4 : 9;
     },
 
   },
@@ -192,8 +192,10 @@ export default {
   border-radius: 8px;
 }
 
-.sort-btn:hover {
+.sort-btn:hover,
+.sort-btn:active {
   background-color: #45a049;
+  font-weight: bold;
 }
 
 .team-members-container {
@@ -325,6 +327,34 @@ a.project-link:hover {
 .cancel-btn {
   background-color: #f44336;
   color: white;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  margin: 0 5px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination-current {
+  margin: 0 10px;
+  font-weight: bold;
+  font-size: 1.1rem;
 }
 
 @media only screen and (max-width: 600px) {
