@@ -2,47 +2,27 @@
   <div class="team-members-page">
     <h2 class="page-title">Team Members</h2>
 
-    <label for="sortDirection" class="sort-label">Sort by Project Name:</label>
-    <select
-      id="sortDirection"
-      v-model="sortDirection"
-      @change="sortMembers"
-      class="sort-select"
-    >
-      <option value="asc">Ascending</option>
-      <option value="desc">Descending</option>
-    </select>
+    <button @click="sortAlphabetically" class="sort-btn">A-Z</button>
+    <button @click="sortReverseAlphabetically" class="sort-btn">Z-A</button>
 
     <div class="team-members-container">
-      <div
-        v-for="member in teamMembers"
-        :key="member.id"
-        class="team-member-card"
-      >
+      <div v-for="(member) in displayedMembers" :key="member.id" class="team-member-card">
         <div class="member-info">
           <h3>{{ member.name }}</h3>
           <p>function: {{ member.function }}</p>
           <p class="email">email: {{ member.email }}</p>
-          <router-link
-            v-if="member.projectName"
-            :to="{ name: 'project-details', params: { id: member.projectId } }"
-            class="project-link"
-          >
+          <router-link v-if="member.projectName" :to="{ name: 'project-details', params: { id: member.projectId } }" class="project-link">
             project: {{ member.projectName }}
           </router-link>
         </div>
 
         <div class="member-actions" v-if="isAuthenticated">
-          <button
-            @click="deleteMember(member.projectId, member.id)"
-            class="delete-btn"
-          >
-            Delete
-          </button>
+          <button @click="deleteMember(member.projectId, member.id)" class="delete-btn">Delete</button>
           <button @click="editMember(member.id)" class="edit-btn">Edit</button>
         </div>
       </div>
     </div>
+
     <div v-if="showEditPopup && isAuthenticated" class="popup">
       <div class="popup-content">
         <h2>Edit Team Member</h2>
@@ -50,11 +30,7 @@
           <label for="edit-name">Name:</label>
           <input v-model="editMemberData.name" required id="edit-name" />
           <label for="edit-function">Function:</label>
-          <input
-            v-model="editMemberData.function"
-            required
-            id="edit-function"
-          />
+          <input v-model="editMemberData.function" required id="edit-function" />
           <label for="edit-email">Email:</label>
           <input v-model="editMemberData.email" required id="edit-email" />
           <div class="buttons">
@@ -63,6 +39,12 @@
           </div>
         </form>
       </div>
+    </div>
+
+    <div class="pagination">
+      <button :disabled="currentPage === 1" @click="prevPage">Previous</button>
+      <span>{{ currentPage }}</span>
+      <button :disabled="currentPage === totalPages" @click="nextPage">Next</button>
     </div>
   </div>
 </template>
@@ -74,7 +56,6 @@ export default {
   data() {
     return {
       teamMembers: [],
-      sortDirection: "asc",
       showEditPopup: false,
       editMemberData: {
         id: null,
@@ -82,18 +63,25 @@ export default {
         function: "",
         email: "",
       },
+      currentPage: 1,
     };
   },
   computed: {
     isAuthenticated() {
       return this.$store.getters.isAuthenticated;
     },
-    sortedMembers() {
-      return this.teamMembers.slice().sort((a, b) => {
-        const result = a.projectName.localeCompare(b.projectName);
-        return this.sortDirection === "asc" ? result : -result;
-      });
+    totalPages() {
+      return Math.ceil(this.teamMembers.length / this.membersPerPage);
     },
+    displayedMembers() {
+      const start = (this.currentPage - 1) * this.membersPerPage;
+      const end = start + this.membersPerPage;
+      return this.teamMembers.slice(start, end);
+    },
+    membersPerPage() {
+      return window.innerWidth < 768 ? 3 : 9;
+    },
+
   },
   created() {
     this.fetchTeamMembers();
@@ -153,8 +141,25 @@ export default {
         console.error("Error deleting team members:", error);
       }
     },
-    sortMembers() {
-      this.sortedMembers;
+    sortAlphabetically() {
+      this.teamMembers.sort((a, b) => {
+        return a.name.localeCompare(b.name);
+      });
+    },
+    sortReverseAlphabetically() {
+      this.teamMembers.sort((a, b) => {
+        return b.name.localeCompare(a.name);
+      });
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    },
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
     },
   },
 };
@@ -173,12 +178,22 @@ export default {
   margin-bottom: 20px;
 }
 
-.sort-label {
-  margin-right: 10px;
+.sort-btn {
+  background-color: #4caf50;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 8px;
 }
 
-.sort-select {
-  padding: 8px;
+.sort-btn:hover {
+  background-color: #45a049;
 }
 
 .team-members-container {
@@ -326,18 +341,6 @@ a.project-link:hover {
   margin-bottom: 20px;
 }
 
-.sort-label {
-  display: block;
-  margin-bottom: 10px;
-}
-
-.sort-select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-bottom: 20px;
-}
 
 .team-members-container {
   display: flex;
@@ -385,8 +388,8 @@ a.project-link:hover {
   background-color: #fff;
   padding: 20px;
   border-radius: 5px;
-  width: 80%; /* Setează lățimea popup-ului la 80% din lățimea ferestrei */
-  max-width: 400px; /* Ajustează lățimea maximă a popup-ului la dimensiunea dorită */
+  width: 80%; 
+  max-width: 400px; 
 }
 
 .popup-content h2 {
