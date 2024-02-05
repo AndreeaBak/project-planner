@@ -1,16 +1,32 @@
-const Chance = require('chance');
-const {db} = require('../db/firebase.js')
+const Chance = require("chance");
+const firebase = require("firebase/app");
+require("firebase/firestore");
+const { db } = require("../db/firebase.js");
+
 const chance = new Chance();
+
+const functions = [
+  "Developer",
+  "Product manager",
+  "Team leader",
+  "Architect",
+  "Business analyst",
+  "Product manager",
+  "QA engineer",
+  "Tester",
+  "Scrum master",
+];
 
 const generateProjects = (nrProiecte) => {
   const projects = [];
   for (let i = 0; i < nrProiecte; i++) {
-    const projectId = chance.guid(); 
+    const projectId = chance.guid();
     const project = {
       projectId: projectId,
       name: chance.company(),
       description: chance.sentence(),
       startDate: chance.date({ string: true, american: false }),
+      teamMembers: {},
     };
     projects.push(project);
   }
@@ -18,29 +34,32 @@ const generateProjects = (nrProiecte) => {
 };
 
 const generateTeamMembers = (nrMembrii, projects) => {
-  const teamMembers = [];
+  const teamMembers = {};
   for (let i = 0; i < nrMembrii; i++) {
     const project = chance.pickone(projects);
-    const membru = {
+    const memberId = chance.guid();
+    const memberFunction = chance.pickone(functions);
+    const teamMember = {
+      id: memberId,
       name: `${chance.first()} ${chance.last()}`,
-      function: chance.word(),
+      function: memberFunction,
       email: chance.email(),
       projectId: project.projectId,
-      projectName: project.name, 
-      projectDescription: project.description, 
-      projectStartDate: project.startDate, 
+      projectName: project.name,
     };
-    teamMembers.push(membru);
+    project.teamMembers[memberId] = teamMember;
+    teamMembers[memberId] = teamMember;
   }
   return teamMembers;
 };
+
 
 const generateUsers = (nrUtilizatori) => {
   const users = [];
   for (let i = 0; i < nrUtilizatori; i++) {
     const user = {
       email: chance.email(),
-      password: 'parolaSecreta',
+      password: "parolaSecreta",
     };
     users.push(user);
   }
@@ -56,25 +75,29 @@ const addData = async () => {
   const teamMembers = generateTeamMembers(nrMembrii, projects);
   const users = generateUsers(nrUtilizatori);
 
-  const projectsCollectionRef = db.collection('projects');
-  projects.forEach(async (project) => {
-    const projectDocRef = projectsCollectionRef.doc(project.projectId);
-    await projectDocRef.set(project);
+  const projectsCollectionRef = db.collection("projects");
+  const usersCollectionRef = db.collection("users");
+
+  const projectsPromises = projects.map(async (project) => {
+    const projectDocRef = await db.collection("projects").doc(project.projectId).set(project);
+    const teamMembersCollectionRef = db.collection("projects").doc(project.projectId).collection("teamMembers");
+  
+    await Promise.all(
+        Object.entries(project.teamMembers).map(async ([teamMemberId, teamMemberData]) => {
+            const teamMemberRef = teamMembersCollectionRef.doc(teamMemberId);
+            await teamMemberRef.set(teamMemberData);
+        })
+    );
+});
+
+
+  const usersPromises = users.map(async (user) => {
+    await db.collection("users").add(user);
   });
 
-  const teamMembersCollectionRef = db.collection('team');
-  teamMembers.forEach(async (teamMember) => {
-    const teamMemberDocRef = teamMembersCollectionRef.doc();
-    await teamMemberDocRef.set(teamMember);
-  });
-
-  const usersCollectionRef = db.collection('users');
-  users.forEach(async (user) => {
-    const userDocRef = usersCollectionRef.doc();
-    await userDocRef.set(user);
-  });
-
-  console.log('Data added successfully.');
+  await Promise.all([...projectsPromises, ...usersPromises]);
+  console.log("Data added successfully");
 };
+
 
 addData();

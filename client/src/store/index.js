@@ -1,9 +1,9 @@
-import { createStore } from 'vuex';
-import axios from 'axios'
+import { createStore } from "vuex";
+import axios from "axios";
 
 const store = createStore({
   state: {
-    token: null, 
+    token: null,
   },
   mutations: {
     setToken(state, token) {
@@ -15,12 +15,12 @@ const store = createStore({
   },
   actions: {
     login({ commit }, token) {
-      commit('setToken', token);
+      commit("setToken", token);
 
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     },
     logout({ commit }) {
-      commit('clearToken');
+      commit("clearToken");
     },
   },
   getters: {

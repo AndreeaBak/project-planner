@@ -4,74 +4,80 @@
     <ul>
       <li v-for="project in projects" :key="project.id" class="project-item">
         <div class="project-info">
-          <router-link v-if="project.id" :to="{ name: 'project-details', params: { id: project.id }}" class="project-link">
+          <router-link
+            v-if="project.id"
+            :to="{ name: 'project-details', params: { id: project.id } }"
+            class="project-link"
+          >
             {{ project.name }}
           </router-link>
         </div>
         <div class="buttons-container">
-          <button v-if="isAuthenticated" @click="deleteProject(project.id)" class="delete-btn">Delete</button>
+          <button
+            v-if="isAuthenticated"
+            @click="deleteProject(project.id)"
+            class="delete-btn"
+          >
+            Delete
+          </button>
         </div>
       </li>
     </ul>
-    <form v-if="isAuthenticated && !editingProject" @submit.prevent="addProject" class="add-form">
+    <form
+      v-if="isAuthenticated"
+      @submit.prevent="addProject"
+      class="add-form"
+    >
       <div class="form-group">
         <label for="projectName">Project Name:</label>
-        <input v-model="newProject.name" type="text" id="projectName" required class="name-input">
+        <input
+          v-model="newProject.name"
+          type="text"
+          id="projectName"
+          required
+          class="name-input"
+        />
       </div>
 
       <div class="form-group">
         <label for="projectDescription">Description:</label>
-        <input v-model="newProject.description" id="projectDescription" required class="desc-input">
+        <input
+          v-model="newProject.description"
+          id="projectDescription"
+          required
+          class="desc-input"
+        />
       </div>
 
       <div class="form-group">
         <label for="projectStartDate">Start Date:</label>
-        <input v-model="newProject.startDate" type="date" id="projectStartDate" required>
+        <input
+          v-model="newProject.startDate"
+          type="date"
+          id="projectStartDate"
+          required
+        />
       </div>
 
       <button type="submit" class="add-btn">Add New Project</button>
-    </form>
-    
-    <form v-if="isAuthenticated && editingProject" @submit.prevent="updateProject(editedProject.id)" class="add-form">
-      <div class="form-group">
-        <label for="projectName">Name:</label>
-        <input v-model="editedProject.name" type="text" id="projectName" required class="name-input">
-      </div>
-
-      <div class="form-group">
-        <label for="projectDescription">Description:</label>
-        <input v-model="editedProject.description" id="projectDescription" required class="desc-input">
-      </div>
-
-      <div class="form-group">
-        <label for="projectStartDate">Start Date:</label>
-        <input v-model="editedProject.startDate" type="date" id="projectStartDate" required>
-      </div>
-
-      <button type="submit" class="add-btn" >Update Project</button>
     </form>
 
   </div>
 </template>
 
 <script>
-import ProjectService from '../services/ProjectService';
+import ProjectService from "../services/ProjectService";
 
 export default {
   data() {
     return {
       projects: [],
       newProject: {
-        name: '',
-        description: '',
+        name: "",
+        description: "",
         startDate: null,
       },
-      editingProject: false,
-      editedProject: {
-        name: '',
-        description: '',
-        startDate: null,
-      },
+      
     };
   },
   computed: {
@@ -88,16 +94,17 @@ export default {
         const response = await ProjectService.getProjects();
         this.projects = response.data;
       } catch (error) {
-        console.error('Error fetching projects:', error);
+        console.error("Error fetching projects:", error);
       }
     },
-    
+
     async deleteProject(id) {
       try {
         await ProjectService.deleteProject(id);
-        this.projects = this.projects.filter(project => project.id !== id);
+        this.projects = this.projects.filter((project) => project.id !== id);
+        console.log(id);
       } catch (error) {
-        console.error('Error deleting project:', error);
+        console.error("Error deleting project:", error);
       }
     },
 
@@ -108,45 +115,14 @@ export default {
         this.resetNewProject();
         this.loadProjects();
       } catch (error) {
-        console.error('Error adding project:', error);
+        console.error("Error adding project:", error);
       }
-    },
-
-     async editProject(id) {
-      try {
-        const response = await ProjectService.getProject(id);
-        this.editingProject = true;
-        this.editedProject = response.data;
-      } catch (error) {
-        console.error('Error fetching project for editing:', error);
-      }
-    },
-
-    async updateProject(id) {
-      try {
-        const response = await ProjectService.editProject(id, this.editedProject);
-        const editedProject = response;
-        this.projects.push(editedProject);
-        this.loadProjects();
-        this.cancelEdit();
-      } catch (error) {
-        console.error('Error updating project:', error);
-      }
-},
-
-    cancelEdit() {
-      this.editingProject = false;
-      this.editedProject = {
-        name: '',
-        description: '',
-        startDate: null,
-      };
     },
 
     resetNewProject() {
       this.newProject = {
-        name: '',
-        description: '',
+        name: "",
+        description: "",
         startDate: null,
       };
     },
@@ -224,11 +200,11 @@ ul {
 .add-form {
   margin-top: 20px;
   display: flex;
-  flex-wrap: wrap; 
+  flex-wrap: wrap;
 }
 
 .form-group {
-  margin-right: 10px; 
+  margin-right: 10px;
   margin-bottom: 15px;
 }
 
@@ -240,7 +216,7 @@ label {
 }
 
 input {
-  width: 200px; 
+  width: 200px;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -263,6 +239,94 @@ input {
 .desc-input,
 .date-input {
   margin-bottom: 15px;
+}
+
+@media only screen and (max-width: 600px) {
+
+.projects-container {
+  margin: 5px auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 500px;
+}
+
+.projects-container h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.project-item {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.project-link {
+  color: black;
+  text-decoration: none;
+}
+
+.project-link:hover {
+  text-decoration: underline;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.add-form {
+  margin: 0 auto;
+  max-width: 400px; 
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+}
+
+.name-input,
+.desc-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.add-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.add-btn:hover {
+  background-color: #0056b3;
+}
+
 }
 </style>
 

@@ -7,9 +7,13 @@
       <br />
       <label>Password:</label>
       <input v-model="password" type="password" required />
-      <span v-if="password && password.length < 8" class="error">Password must be at least 8 characters long.</span>
+      <span v-if="password && password.length < 8" class="error"
+        >Password must be at least 8 characters long.</span
+      >
       <br />
-      <h3>Already have an account? <router-link to="/login">Login</router-link></h3>
+      <h3>
+        Already have an account? <router-link to="/login">Login</router-link>
+      </h3>
       <button type="submit" class="register-btn">Register</button>
     </form>
   </div>
@@ -19,23 +23,21 @@
 export default {
   data() {
     return {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     };
   },
   methods: {
     async register() {
       try {
-        await this.$axios
-        .post('/register', {
+        await this.$axios.post("/register", {
           email: this.email,
           password: this.password,
-        })
-        
+        });
 
-        this.$router.push('/login');
+        this.$router.push("/login");
       } catch (error) {
-        console.error('Registration failed:', error);
+        console.error("Registration failed:", error);
       }
     },
   },
@@ -82,5 +84,60 @@ input {
   color: red;
   font-size: 14px;
   margin-top: 5px;
+}
+
+@media only screen and (max-width: 600px) {
+  .register-container {
+    margin: 50px auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+  }
+
+  .register-form {
+    margin-top: 20px;
+  }
+
+  .register-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  .register-form input[type="email"],
+  .register-form input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .register-form .error {
+    color: red;
+  }
+
+  .register-form h3 {
+    margin-top: 15px;
+    font-size: 16px;
+  }
+
+  .register-form button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .register-form button:hover {
+    background-color: #0056b3;
+  }
 }
 </style>
